@@ -1,11 +1,11 @@
 import React from 'react';
-import { Text, View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import IconComment from '../assets/icons/IconComment';
-import IconRetweet from '../assets/icons/IconRetweet';
 import IconHeart from '../assets/icons/IconHeart';
-import IconShare from '../assets/icons/IconShare';
 import IconPlus from '../assets/icons/IconPlus';
+import IconRetweet from '../assets/icons/IconRetweet';
+import IconShare from '../assets/icons/IconShare';
 
 const DATA = [
   {
@@ -70,9 +70,7 @@ export default function HomeScreen({ navigation }) {
         />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
-        <TouchableOpacity
-          style={styles.flexRow}
-          onPress={() => gotoSingleTweet()}>
+        <TouchableOpacity style={styles.flexRow} onPress={() => gotoSingleTweet()}>
           <Text numberOfLines={1} style={styles.tweetName}>
             {item.title}
           </Text>
@@ -88,9 +86,9 @@ export default function HomeScreen({ navigation }) {
           style={styles.tweetContentContainer}
           onPress={() => gotoSingleTweet()}>
           <Text style={styles.tweetContent}>
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quisquam
-            assumenda aut corporis velit tempora alias, illum pariatur
-            repudiandae repellendus excepturi!
+            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quisquam assumenda
+            aut corporis velit tempora alias, illum pariatur repudiandae repellendus
+            excepturi!
           </Text>
         </TouchableOpacity>
         <View style={styles.tweetEngagement}>
@@ -136,13 +134,9 @@ export default function HomeScreen({ navigation }) {
         data={DATA}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={styles.tweetSeperator}></View>
-        )}
+        ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
       />
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => gotoNewTweet()}>
+      <TouchableOpacity style={styles.floatingButton} onPress={() => gotoNewTweet()}>
         <IconPlus
           width={40}
           height={40}
