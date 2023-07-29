@@ -1,56 +1,34 @@
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
+import { API_BASE_URL } from '@env';
+import axios from 'axios';
+import { formatDistanceToNowStrict } from 'date-fns';
+import locale from 'date-fns/locale/en-US';
+import React, { useEffect, useState } from 'react';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IconComment from '../assets/icons/IconComment';
 import IconHeart from '../assets/icons/IconHeart';
 import IconPlus from '../assets/icons/IconPlus';
 import IconRetweet from '../assets/icons/IconRetweet';
 import IconShare from '../assets/icons/IconShare';
-
-const DATA = [
-  {
-    id: 1,
-    title: 'First item',
-  },
-  {
-    id: 2,
-    title: 'Second item',
-  },
-  {
-    id: 3,
-    title: 'Third item',
-  },
-  {
-    id: 4,
-    title: 'Fourth item',
-  },
-  {
-    id: 5,
-    title: 'Fifth item',
-  },
-  {
-    id: 6,
-    title: 'Sixth item',
-  },
-  {
-    id: 7,
-    title: 'Seventh item',
-  },
-  {
-    id: 8,
-    title: 'Eighth item',
-  },
-  {
-    id: 9,
-    title: 'Ninth item',
-  },
-  {
-    id: 10,
-    title: 'Tenth item',
-  },
-];
+import formatDistance from '../utilities/formatDistanceCustom';
 
 export default function HomeScreen({ navigation }) {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    getAllTweets();
+  }, []);
+
+  function getAllTweets() {
+    axios
+      .get(API_BASE_URL + 'tweets')
+      .then((response) => {
+        setData(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
   function gotoProfile() {
     navigation.navigate('Profile Screen');
   }
@@ -61,35 +39,33 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('New Tweet');
   }
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
       <TouchableOpacity onPress={() => gotoProfile()}>
-        <Image
-          style={styles.avatar}
-          source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
-        />
+        <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.flexRow} onPress={() => gotoSingleTweet()}>
           <Text numberOfLines={1} style={styles.tweetName}>
-            {item.title}
+            {tweet.user.name}
           </Text>
           <Text numberOfLines={1} style={styles.tweetHandle}>
-            @handle
+            @{tweet.user.username}
           </Text>
           <Text style={styles.middot}>&middot;</Text>
           <Text numberOfLines={1} style={styles.tweetTimestamp}>
-            9m
+            {formatDistanceToNowStrict(new Date(tweet.created_at), {
+              locale: {
+                ...locale,
+                formatDistance,
+              },
+            })}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tweetContentContainer}
           onPress={() => gotoSingleTweet()}>
-          <Text style={styles.tweetContent}>
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quisquam assumenda
-            aut corporis velit tempora alias, illum pariatur repudiandae repellendus
-            excepturi!
-          </Text>
+          <Text style={styles.tweetContent}>{tweet.body}</Text>
         </TouchableOpacity>
         <View style={styles.tweetEngagement}>
           <TouchableOpacity style={styles.flexRow}>
@@ -131,7 +107,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <FlatList
-        data={DATA}
+        data={data}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
