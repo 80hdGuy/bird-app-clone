@@ -6,11 +6,14 @@ import IconHeart from '../assets/icons/IconHeart';
 import IconRetweet from '../assets/icons/IconRetweet';
 import IconShare from '../assets/icons/IconShare';
 
-export default function TweetScreen() {
+export default function TweetScreen({ navigation }) {
+  function gotoProfile() {
+    navigation.navigate('Profile Screen');
+  }
   return (
     <View style={styles.container}>
       <View style={styles.profileConainer}>
-        <TouchableOpacity style={styles.flexRow}>
+        <TouchableOpacity style={styles.flexRow} onPress={() => gotoProfile()}>
           <Image
             style={styles.avatar}
             source={{ uri: 'https://reactnative.dev/img/tiny_logo.png' }}
