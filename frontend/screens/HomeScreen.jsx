@@ -3,7 +3,15 @@ import axios from 'axios';
 import { formatDistanceToNowStrict } from 'date-fns';
 import locale from 'date-fns/locale/en-US';
 import React, { useEffect, useState } from 'react';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import IconComment from '../assets/icons/IconComment';
 import IconHeart from '../assets/icons/IconHeart';
 import IconPlus from '../assets/icons/IconPlus';
@@ -13,20 +21,43 @@ import formatDistance from '../utilities/formatDistanceCustom';
 
 export default function HomeScreen({ navigation }) {
   const [data, setData] = useState([]);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(true);
+  const [page, setPage] = useState(1);
+  const [atTheEndOfTweets, setAtTheEndOfTweets] = useState(false);
   useEffect(() => {
     getAllTweets();
-  }, []);
+  }, [page]);
 
   function getAllTweets() {
     axios
-      .get(API_BASE_URL + 'tweets')
+      .get(API_BASE_URL + `tweets?page=${page}`)
       .then((response) => {
-        setData(response.data);
+        if (page === 1) {
+          setData(response.data.data);
+        } else {
+          setData([...data, ...response.data.data]);
+        }
+        if (!response.data.next_page_url) {
+          setAtTheEndOfTweets(true);
+        }
+
+        setIsLoading(false);
+        setIsRefreshing(false);
       })
       .catch((error) => {
         console.log(error);
+        setIsLoading(false);
       });
+  }
+
+  function handleRefresh() {
+    setIsRefreshing(true);
+    getAllTweets();
+  }
+
+  function handleEndReached() {
+    setPage(page + 1);
   }
 
   function gotoProfile() {
@@ -106,12 +137,25 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
-      />
+      {isLoading ? (
+        <ActivityIndicator style={{ marginTop: 8 }} size="large" color="grey" />
+      ) : (
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !atTheEndOfTweets && (
+              <ActivityIndicator size="large" color="grey"></ActivityIndicator>
+            )
+          }
+        />
+      )}
       <TouchableOpacity style={styles.floatingButton} onPress={() => gotoNewTweet()}>
         <IconPlus
           width={40}
