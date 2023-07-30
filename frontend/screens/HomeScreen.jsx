@@ -1,6 +1,6 @@
 import { formatDistanceToNowStrict } from 'date-fns';
 import locale from 'date-fns/locale/en-US';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,16 +18,45 @@ import IconShare from '../assets/icons/IconShare';
 import axiosConfig from '../utilities/axiosConfig';
 import formatDistance from '../utilities/formatDistanceCustom';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ route, navigation }) {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [page, setPage] = useState(1);
-  const [atTheEndOfTweets, setAtTheEndOfTweets] = useState(false);
+  const [isAtTheEndOfScrolling, setIsAtTheEndOfScrolling] = useState(false);
+  const flatListRef = useRef();
 
   useEffect(() => {
     getAllTweets();
   }, [page]);
+
+  useEffect(() => {
+    if (route.params?.newTweetAdded) {
+      flatListRef.current.scrollToOffset({
+        offset: 0,
+      });
+      getAllTweetsRefresh();
+    }
+  }, [route.params?.newTweetAdded]);
+
+  function getAllTweetsRefresh() {
+    setPage(1);
+    setIsAtTheEndOfScrolling(false);
+    setIsRefreshing(false);
+
+    axiosConfig
+      .get(`/tweets`)
+      .then((response) => {
+        setData(response.data.data);
+
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+      });
+  }
 
   function getAllTweets() {
     axiosConfig
@@ -39,7 +68,7 @@ export default function HomeScreen({ navigation }) {
           setData([...data, ...response.data.data]);
         }
         if (!response.data.next_page_url) {
-          setAtTheEndOfTweets(true);
+          setIsAtTheEndOfScrolling(true);
         }
 
         setIsLoading(false);
@@ -147,6 +176,7 @@ export default function HomeScreen({ navigation }) {
         <ActivityIndicator style={{ marginTop: 8 }} size="large" color="grey" />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={data}
           renderItem={renderItem}
           keyExtractor={(tweet) => tweet.id.toString()}
@@ -156,7 +186,7 @@ export default function HomeScreen({ navigation }) {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0}
           ListFooterComponent={() =>
-            !atTheEndOfTweets && (
+            !isAtTheEndOfScrolling && (
               <ActivityIndicator size="large" color="grey"></ActivityIndicator>
             )
           }
