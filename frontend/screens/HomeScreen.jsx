@@ -1,5 +1,3 @@
-import { API_BASE_URL } from '@env';
-import axios from 'axios';
 import { formatDistanceToNowStrict } from 'date-fns';
 import locale from 'date-fns/locale/en-US';
 import React, { useEffect, useState } from 'react';
@@ -17,6 +15,7 @@ import IconHeart from '../assets/icons/IconHeart';
 import IconPlus from '../assets/icons/IconPlus';
 import IconRetweet from '../assets/icons/IconRetweet';
 import IconShare from '../assets/icons/IconShare';
+import axiosConfig from '../utilities/axiosConfig';
 import formatDistance from '../utilities/formatDistanceCustom';
 
 export default function HomeScreen({ navigation }) {
@@ -25,13 +24,14 @@ export default function HomeScreen({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [page, setPage] = useState(1);
   const [atTheEndOfTweets, setAtTheEndOfTweets] = useState(false);
+
   useEffect(() => {
     getAllTweets();
   }, [page]);
 
   function getAllTweets() {
-    axios
-      .get(API_BASE_URL + `tweets?page=${page}`)
+    axiosConfig
+      .get(`/tweets?page=${page}`)
       .then((response) => {
         if (page === 1) {
           setData(response.data.data);
@@ -63,9 +63,13 @@ export default function HomeScreen({ navigation }) {
   function gotoProfile() {
     navigation.navigate('Profile Screen');
   }
-  function gotoSingleTweet() {
-    navigation.navigate('Tweet Screen');
+
+  function gotoSingleTweet(tweetId) {
+    navigation.navigate('Tweet Screen', {
+      tweetId: tweetId,
+    });
   }
+
   function gotoNewTweet() {
     navigation.navigate('New Tweet');
   }
@@ -76,7 +80,9 @@ export default function HomeScreen({ navigation }) {
         <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
-        <TouchableOpacity style={styles.flexRow} onPress={() => gotoSingleTweet()}>
+        <TouchableOpacity
+          style={styles.flexRow}
+          onPress={() => gotoSingleTweet(tweet.id)}>
           <Text numberOfLines={1} style={styles.tweetName}>
             {tweet.user.name}
           </Text>
@@ -95,7 +101,7 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tweetContentContainer}
-          onPress={() => gotoSingleTweet()}>
+          onPress={() => gotoSingleTweet(tweet.id)}>
           <Text style={styles.tweetContent}>{tweet.body}</Text>
         </TouchableOpacity>
         <View style={styles.tweetEngagement}>
@@ -143,7 +149,7 @@ export default function HomeScreen({ navigation }) {
         <FlatList
           data={data}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(tweet) => tweet.id.toString()}
           ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
