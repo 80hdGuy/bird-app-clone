@@ -48,9 +48,7 @@ export default function HomeScreen({ route, navigation }) {
       .get(`/tweets`)
       .then((response) => {
         setData(response.data.data);
-
         setIsLoading(false);
-        setIsRefreshing(false);
       })
       .catch((error) => {
         console.log(error);
@@ -82,7 +80,7 @@ export default function HomeScreen({ route, navigation }) {
 
   function handleRefresh() {
     setIsRefreshing(true);
-    getAllTweets();
+    getAllTweetsRefresh();
   }
 
   function handleEndReached() {
