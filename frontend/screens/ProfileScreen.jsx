@@ -13,81 +13,70 @@ import {
 import IconCalendar from '../assets/icons/IconCalendar';
 import IconLink from '../assets/icons/IconLink';
 import IconLocation from '../assets/icons/IconLocation';
+import RenderItem from '../components/RenderItem';
 import axiosConfig from '../utilities/axiosConfig';
-
-const DATA = [
-  {
-    id: 1,
-    title: 'First item',
-  },
-  {
-    id: 2,
-    title: 'Second item',
-  },
-  {
-    id: 3,
-    title: 'Third item',
-  },
-  {
-    id: 4,
-    title: 'Fourth item',
-  },
-  {
-    id: 5,
-    title: 'Fifth item',
-  },
-  {
-    id: 6,
-    title: 'Sixth item',
-  },
-  {
-    id: 7,
-    title: 'Seventh item',
-  },
-  {
-    id: 8,
-    title: 'Eighth item',
-  },
-  {
-    id: 9,
-    title: 'Ninth item',
-  },
-  {
-    id: 10,
-    title: 'Tenth item',
-  },
-];
 
 export default function ProfileScreen({ route, navigation }) {
   const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingUserInfo, setIsLoadingUserInfo] = useState(true);
+
+  const [userTweets, setUserTweets] = useState([]);
+  const [isLoadingUserTweets, setIsLoadingUserTweets] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(true);
+  const [page, setPage] = useState(1);
+  const [isAtTheEndOfScrolling, setIsAtTheEndOfScrolling] = useState(false);
 
   useEffect(() => {
     getUserProfile();
-  }, []);
-
-  const renderItem = ({ item }) => (
-    <View style={{ marginVertical: 20 }}>
-      <Text>{item.title}</Text>
-    </View>
-  );
+    getUserTweets();
+  }, [page]);
 
   function getUserProfile() {
     axiosConfig
       .get(`users/${route.params.userId}}`)
       .then((response) => {
         setUserData(response.data);
-        setIsLoading(false);
+        setIsLoadingUserInfo(false);
       })
       .catch((error) => {
         console.log(error);
-        setIsLoading(false);
+        setIsLoadingUserInfo(false);
       });
+  }
+
+  function getUserTweets() {
+    axiosConfig
+      .get(`/users/${route.params.userId}/tweets?page=${page}`)
+      .then((response) => {
+        if (page === 1) {
+          setUserTweets(response.data.data);
+        } else {
+          setUserTweets([...userTweets, ...response.data.data]);
+        }
+        if (!response.data.next_page_url) {
+          setIsAtTheEndOfScrolling(true);
+        }
+        setIsLoadingUserTweets(false);
+        setIsRefreshing(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoadingUserTweets(false);
+      });
+  }
+
+  function handleRefresh() {
+    setIsRefreshing(true);
+    getUserTweets();
+  }
+
+  function handleEndReached() {
+    setPage(page + 1);
   }
 
   const profileHeader = () => (
     <View style={styles.container}>
-      {isLoading ? (
+      {isLoadingUserInfo ? (
         <ActivityIndicator style={{ marginTop: 8 }} size="large" color="grey" />
       ) : (
         <>
@@ -145,14 +134,29 @@ export default function ProfileScreen({ route, navigation }) {
   );
 
   return (
-    <FlatList
-      style={{ backgroundColor: '#c8c8c8' }}
-      data={DATA}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
-      ListHeaderComponent={profileHeader}
-    />
+    <View style={styles.container}>
+      {isLoadingUserTweets ? (
+        <ActivityIndicator style={{ marginTop: 8 }} size="large" color="grey" />
+      ) : (
+        <FlatList
+          data={userTweets}
+          renderItem={(props) => <RenderItem {...props} />}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => <View style={styles.tweetSeperator}></View>}
+          ListHeaderComponent={profileHeader}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0}
+          ListFooterComponent={() =>
+            !isAtTheEndOfScrolling && (
+              <ActivityIndicator size="large" color="grey"></ActivityIndicator>
+            )
+          }
+          scrollIndicatorInsets={{ right: 1 }} //only needed for iOS 13 devices it fixes bugged scrollbar
+        />
+      )}
+    </View>
   );
 }
 
