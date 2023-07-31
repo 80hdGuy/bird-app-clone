@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Tweet;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,12 +16,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 Route::get('/tweets', function () {
-    return Tweet::with('user:id,name,username,avatar')->latest()->paginate(10);
+    return Tweet::with('user:id,name,username,avatar')
+        ->latest('created_at')
+        ->paginate(10);
 });
 
 Route::get('/tweets/{tweet}', function (Tweet $tweet) {
@@ -28,7 +31,6 @@ Route::get('/tweets/{tweet}', function (Tweet $tweet) {
 });
 
 Route::post('/tweets', function (Request $request) {
-    sleep(2);
     $request->validate([
         'body' => 'required',
     ]);
@@ -37,4 +39,18 @@ Route::post('/tweets', function (Request $request) {
         'user_id' => 1,
         'body' => $request->body,
     ]);
+});
+
+Route::get('/users/{user}', function (User $user) {
+    return $user->only(
+        'id',
+        'name',
+        'username',
+        'avatar',
+        'description',
+        'location',
+        'link',
+        'linktext',
+        'created_at'
+    );
 });

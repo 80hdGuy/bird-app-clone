@@ -68,7 +68,6 @@ export default function HomeScreen({ route, navigation }) {
         if (!response.data.next_page_url) {
           setIsAtTheEndOfScrolling(true);
         }
-
         setIsLoading(false);
         setIsRefreshing(false);
       })
@@ -87,8 +86,10 @@ export default function HomeScreen({ route, navigation }) {
     setPage(page + 1);
   }
 
-  function gotoProfile() {
-    navigation.navigate('Profile Screen');
+  function gotoProfile(userId) {
+    navigation.navigate('Profile Screen', {
+      userId: userId,
+    });
   }
 
   function gotoSingleTweet(tweetId) {
@@ -103,7 +104,7 @@ export default function HomeScreen({ route, navigation }) {
 
   const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={() => gotoProfile()}>
+      <TouchableOpacity onPress={() => gotoProfile(tweet.user.id)}>
         <Image style={styles.avatar} source={{ uri: tweet.user.avatar }} />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
