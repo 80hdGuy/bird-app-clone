@@ -17,7 +17,7 @@ export default function LoginScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.headingText}>Sign in</Text>
-      {error && <Text style={{ color: 'red' }}>{error}</Text>}
+      {error && <Text style={{ paddingHorizontal: 55, color: 'red' }}>{error}</Text>}
       <TextInput
         style={[styles.inputBox, styles.textSize16]}
         onChangeText={setEmail}
@@ -43,7 +43,10 @@ export default function LoginScreen({ navigation }) {
       ) : (
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => login(email, password)}>
+          onPress={() => {
+            login(email, password);
+            setPassword('');
+          }}>
           <Text style={[styles.loginButtonText, styles.textSize16]}>Sign in</Text>
         </TouchableOpacity>
       )}

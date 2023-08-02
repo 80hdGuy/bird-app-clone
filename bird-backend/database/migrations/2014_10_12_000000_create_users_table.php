@@ -16,7 +16,7 @@ return new class () extends Migration {
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('username')->unique();
-            $table->string('avatar');
+            $table->string('avatar')->default('https://gravatar.com/avatar/00000000000000000000000000000005?d=mp');
             $table->string('description')->nullable();
             $table->string('location')->nullable();
             $table->string('link')->nullable();

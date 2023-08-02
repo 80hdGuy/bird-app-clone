@@ -1,25 +1,51 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { AuthContext } from '../../context/AuthProvider';
+import axiosConfig from '../../utilities/axiosConfig';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { login, error, isLoading } = useContext(AuthContext);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState('');
+  const [error, setError] = useState('');
+
+  function register(email, username, password, confirmPassword) {
+    setIsLoading(true);
+    axiosConfig
+      .post('/register', {
+        name: name,
+        email: email,
+        username: username,
+        password: password,
+        password_confirmation: confirmPassword,
+      })
+      .then((response) => {
+        navigation.navigate('Login Screen');
+
+        setIsLoading(false);
+        setError(null);
+      })
+      .catch((error) => {
+        console.log(error.response.data.message);
+        const key = Object.keys(error.response.data.errors)[0];
+        setError(error.response.data.errors[key][0]);
+        setIsLoading(false);
+      });
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.headingText}>Register</Text>
-      {error && <Text style={{ color: 'red' }}>{error}</Text>}
+      {error && <Text style={{ paddingHorizontal: 55, color: 'red' }}>{error}</Text>}
       <TextInput
         style={[styles.inputBox, styles.textSize16]}
         onChangeText={setName}
@@ -55,8 +81,8 @@ export default function RegisterScreen({ navigation }) {
       />
       <TextInput
         style={[styles.inputBox, styles.textSize16]}
-        onChangeText={setPassword}
-        value={password}
+        onChangeText={setConfirmPassword}
+        value={confirmPassword}
         placeholder="Confirm password"
         placeholderTextColor="grey"
         autoCapitalize="none"
@@ -68,13 +94,19 @@ export default function RegisterScreen({ navigation }) {
       ) : (
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => Alert.alert('Registered!')}>
+          onPress={() => {
+            register(email, username, password, confirmPassword);
+            setPassword('');
+            setConfirmPassword('');
+          }}>
           <Text style={[styles.loginButtonText, styles.textSize16]}>Register</Text>
         </TouchableOpacity>
       )}
 
       <View style={{ flexDirection: 'row' }}>
-        <Text style={[styles.registerText, styles.textSize16]}>Have an account?</Text>
+        <Text style={[styles.registerText, styles.textSize16]}>
+          Already have an account?
+        </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Login Screen')}>
           <Text style={[styles.registerLink, styles.textSize16]}>Sign in</Text>
         </TouchableOpacity>
@@ -89,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#212121',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 40,
+    gap: 20,
   },
   textSize16: {
     fontSize: 16,
