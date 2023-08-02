@@ -49,8 +49,6 @@ export const AuthProvider = ({ children }) => {
           axiosConfig
             .post('/logout')
             .then((response) => {
-              setUser(null);
-              SecureStore.deleteItemAsync('user');
               setError(null);
               setIsLoading(false);
             })
@@ -58,6 +56,10 @@ export const AuthProvider = ({ children }) => {
               console.log(error.response.data.message);
               setError(error.response.data.message);
               setIsLoading(false);
+            })
+            .finally(() => {
+              setUser(null);
+              SecureStore.deleteItemAsync('user');
             });
         },
       }}>
