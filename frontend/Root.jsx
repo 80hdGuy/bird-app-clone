@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as SecureStore from 'expo-secure-store';
 import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-gesture-handler';
@@ -107,14 +108,22 @@ const TabNavigator = () => {
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
   useEffect(() => {
     // TODO: check if user is logged in or not
     // TODO: check SecureStore for user object/token
-    // setTimeout(() => {
-    setIsLoading(false);
-    // }, 2000);
+    SecureStore.getItemAsync('user')
+      .then((userString) => {
+        if (userString) {
+          setUser(JSON.parse(userString));
+        }
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setIsLoading(false);
+      });
   }, []);
 
   if (isLoading) {
