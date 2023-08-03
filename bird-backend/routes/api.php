@@ -22,7 +22,17 @@ use Illuminate\Validation\ValidationException;
 //     return $request->user();
 // });
 
-Route::get('/tweets', function () {
+Route::middleware('auth:sanctum')->get('/tweets', function () {
+
+    $followers = auth()->user()->follows->pluck('id');
+
+    return Tweet::with('user:id,name,username,avatar')
+        ->whereIn('user_id', $followers)
+        ->latest('created_at')
+        ->paginate(10);
+});
+
+Route::get('/tweets_all', function () {
     return Tweet::with('user:id,name,username,avatar')
         ->latest('created_at')
         ->paginate(10);
@@ -32,13 +42,13 @@ Route::get('/tweets/{tweet}', function (Tweet $tweet) {
     return $tweet->load('user:id,name,username,avatar');
 });
 
-Route::post('/tweets', function (Request $request) {
+Route::middleware('auth:sanctum')->post('/tweets', function (Request $request) {
     $request->validate([
         'body' => 'required',
     ]);
 
     return Tweet::create([
-        'user_id' => 1,
+        'user_id' => auth()->id(),
         'body' => $request->body,
     ]);
 });
@@ -91,7 +101,6 @@ Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
 });
 
 Route::post('/register', function (Request $request) {
-    sleep(2);
     $request->validate([
         'name' => 'required',
         'email' => 'required|email|unique:users',
@@ -105,6 +114,8 @@ Route::post('/register', function (Request $request) {
         'username' => $request->username,
         'password' => Hash::make($request->password),
     ]);
+
+    $user->follows()->attach($user);
 
     return response()->json($user, 201);
 });

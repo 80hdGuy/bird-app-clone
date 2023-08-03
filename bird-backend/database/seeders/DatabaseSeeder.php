@@ -21,6 +21,18 @@ class DatabaseSeeder extends Seeder
             'email' => 'rihards@rihards.com',
         ]);
 
-        Tweet::factory(40)->create();
+        User::factory(100)
+          ->sequence(fn ($sequence) => ['name' => 'Person '. $sequence->index + 2])
+          ->create();
+
+        foreach (range(0, 80, 20) as $userGroup) {
+            foreach (range($userGroup + 1, $userGroup + 20) as $user_id) {
+                Tweet::factory()->create(['user_id' => $user_id]);
+                foreach (range($userGroup + 1, $userGroup + 20) as $following_user_id) {
+                    User::find($user_id)->follows()->attach($following_user_id);
+                }
+            }
+        }
+        //Tweet::factory(40)->create();
     }
 }
