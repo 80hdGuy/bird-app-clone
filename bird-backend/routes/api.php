@@ -82,7 +82,7 @@ Route::post('/login', function (Request $request) {
 
     if (! $user || ! Hash::check($request->password, $user->password)) {
         throw ValidationException::withMessages([
-            'The provided credentials are incorrect.',
+            'email' => ['The provided credentials are incorrect.'],
         ]);
     }
 
@@ -118,4 +118,22 @@ Route::post('/register', function (Request $request) {
     $user->follows()->attach($user);
 
     return response()->json($user, 201);
+});
+
+Route::middleware('auth:sanctum')->post('/follow/{user}', function (User $user) {
+
+    auth()->user()->follow($user);
+
+    return response()->json('Followed', 201);
+});
+
+Route::middleware('auth:sanctum')->post('/unfollow/{user}', function (User $user) {
+
+    auth()->user()->unfollow($user);
+
+    return response()->json('Unfollowed', 201);
+});
+
+Route::middleware('auth:sanctum')->get('/is_following/{user}', function (User $user) {
+    return response()->json(auth()->user()->isFollowing($user), 200);
 });
