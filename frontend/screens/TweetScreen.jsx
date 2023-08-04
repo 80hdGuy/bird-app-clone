@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -13,11 +13,15 @@ import IconDots from '../assets/icons/IconDots';
 import IconHeart from '../assets/icons/IconHeart';
 import IconRetweet from '../assets/icons/IconRetweet';
 import IconShare from '../assets/icons/IconShare';
+import TweetOptionsModal from '../components/TweetOptionsModal';
+import { AuthContext } from '../context/AuthProvider';
 import axiosConfig from '../utilities/axiosConfig';
 
 export default function TweetScreen({ route, navigation }) {
   const [tweetData, setTweetData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isShowingOptions, setIsShowingOptions] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     getTweet();
@@ -32,8 +36,27 @@ export default function TweetScreen({ route, navigation }) {
         setIsLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        console.log(error.response);
         setIsLoading(false);
+      });
+  }
+
+  function showOptionsMenu() {
+    setIsShowingOptions(true);
+  }
+
+  function deleteTweet() {
+    setIsShowingOptions(false);
+    axiosConfig.defaults.headers.common['Authorization'] = `Bearer ${user.token}`;
+    axiosConfig
+      .delete(`tweets/${route.params.tweetId}`)
+      .then((response) => {
+        navigation.navigate('Home1', {
+          tweetDeleted: true,
+        });
+      })
+      .catch((error) => {
+        console.log(error.response);
       });
   }
 
@@ -58,9 +81,11 @@ export default function TweetScreen({ route, navigation }) {
                 <Text style={styles.tweetHandle}>@{tweetData.user.username}</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity>
-              <IconDots width={30} height={30} color="#3c3c3c"></IconDots>
-            </TouchableOpacity>
+            {user.id === tweetData.user.id && (
+              <TouchableOpacity onPress={() => showOptionsMenu()}>
+                <IconDots width={30} height={30} color="#3c3c3c"></IconDots>
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.tweetContentContainer}>
             <Text style={styles.tweetContent}>{tweetData.body}</Text>
@@ -107,6 +132,14 @@ export default function TweetScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
         </>
+      )}
+      {isShowingOptions && (
+        <TweetOptionsModal
+          onClose={() => setIsShowingOptions(false)}
+          onDelete={() => {
+            deleteTweet();
+          }}
+        />
       )}
     </View>
   );
