@@ -3,64 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tweet;
-use App\Http\Requests\StoreTweetRequest;
-use App\Http\Requests\UpdateTweetRequest;
+use Illuminate\Http\Request;
 
 class TweetController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the tweets from followed users.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $followers = $request->user()->follows->pluck('id');
+
+        return Tweet::with('user:id,name,username,avatar')
+            ->whereIn('user_id', $followers)
+            ->latest('created_at')
+            ->paginate(10);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show all tweets
      */
-    public function create()
+    public function all()
     {
-        //
+        return Tweet::with('user:id,name,username,avatar')
+        ->latest('created_at')
+        ->paginate(10);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created tweet in storage.
      */
-    public function store(StoreTweetRequest $request)
+    public function store(Request $request)
     {
-        //
+        $request->validate([
+            'body' => 'required',
+        ]);
+
+        return Tweet::create([
+            'user_id' => $request->user()->id,
+            'body' => $request->body,
+        ]);
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified tweet.
      */
     public function show(Tweet $tweet)
     {
-        //
+        return $tweet->load('user:id,name,username,avatar');
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Tweet $tweet)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateTweetRequest $request, Tweet $tweet)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
+     * Remove the specified tweet from storage.
      */
     public function destroy(Tweet $tweet)
     {
-        //
+        abort_if($tweet->user_id !== auth()->user()->id, 403);
+        return response()->json($tweet->delete(), 200);
     }
 }
