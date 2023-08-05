@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/users/{user}', [UserProfileController::class, 'show'])->name('user.profile.show');
 
-Route::get('/users/{user}/tweets', [UserController::class, 'tweets'])->name('user.profile.tweets');
+Route::get('/users/{user}/tweets', [UserProfileController::class, 'tweets'])->name('user.profile.tweets');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'destroy'])->name('logout');
